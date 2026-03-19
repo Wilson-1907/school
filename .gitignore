@@ -1,0 +1,5 @@
+server/.env
+node_modules
+server/uploads
+server/.venv
+node_modules

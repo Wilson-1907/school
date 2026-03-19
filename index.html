@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Karatina University AI Assistant</title>
+<style>
+body { font-family: Arial, sans-serif; }
+
+/* Floating Button */
+#chatButton {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #0B6623;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 15px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* Chat Window */
+#chatWindow {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 350px;
+    height: 450px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(20px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+/* Header */
+#chatHeader {
+    background-color: #0B6623;
+    color: white;
+    padding: 15px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Messages */
+#chatMessages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Message Bubbles */
+.message {
+    margin: 8px 0;
+    padding: 8px 12px;
+    border-radius: 12px;
+    max-width: 80%;
+    white-space: pre-line; /* preserves line breaks from AI */
+}
+
+.user { background-color: #D4AF37; align-self: flex-end; }
+.bot { background-color: #f1f1f1; align-self: flex-start; }
+
+/* Input Area */
+#chatInputArea { display: flex; border-top: 2px solid #D4AF37; }
+#chatInput { flex: 1; padding: 10px; border: none; outline: none; }
+#sendBtn { background-color: #D4AF37; border: none; padding: 10px 15px; cursor: pointer; }
+
+/* Typing Indicator */
+#typingIndicator {
+    font-style: italic;
+    color: gray;
+    margin: 5px 10px;
+    display: none;
+}
+</style>
+</head>
+<body>
+
+<button id="chatButton">💬 Chat</button>
+
+<div id="chatWindow">
+    <div id="chatHeader">Karatina University AI Assistant</div>
+    <div id="chatMessages"></div>
+    <div id="typingIndicator">AI is typing<span id="dots">...</span></div>
+    <div id="chatInputArea">
+        <input type="text" id="chatInput" placeholder="Ask me anything about Karu..." />
+        <button id="sendBtn">Send</button>
+    </div>
+</div>
+
+<script>
+const chatButton = document.getElementById("chatButton");
+const chatWindow = document.getElementById("chatWindow");
+const sendBtn = document.getElementById("sendBtn");
+const chatInput = document.getElementById("chatInput");
+const chatMessages = document.getElementById("chatMessages");
+const typingIndicator = document.getElementById("typingIndicator");
+
+let greeted = false;
+chatWindow.style.display = "none";
+
+chatButton.onclick = () => {
+    if (chatWindow.style.display === "none") {
+        chatWindow.style.display = "flex";
+        if (!greeted) {
+            addBotMessage("Hello 👋 Welcome to Karatina University! I am your official AI assistant. How may I assist you today?");
+            greeted = true;
+        }
+    } else { chatWindow.style.display = "none"; }
+};
+
+// Send Message
+async function sendMessage() {
+    const message = chatInput.value.trim();
+    if (!message) return;
+    addUserMessage(message);
+    chatInput.value = "";
+    typingIndicator.style.display = "block";
+
+    try {
+        const response = await fetch("http://localhost:3000/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message })
+        });
+        const data = await response.json();
+        typingIndicator.style.display = "none";
+        addBotMessage(data.reply);
+    } catch (error) {
+        typingIndicator.style.display = "none";
+        addBotMessage("Error connecting to server.");
+        console.error("Frontend fetch error:", error);
+    }
+}
+
+// Message Helpers
+function addUserMessage(text) {
+    const msg = document.createElement("div");
+    msg.classList.add("message", "user");
+    msg.textContent = text;
+    chatMessages.appendChild(msg);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+function addBotMessage(text) {
+    const msg = document.createElement("div");
+    msg.classList.add("message", "bot");
+    msg.textContent = text;
+    chatMessages.appendChild(msg);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Events
+sendBtn.onclick = sendMessage;
+chatInput.addEventListener("keypress", e => { if (e.key === "Enter") sendMessage(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+express 
+cors 
+dotenv 
+fs 
+pdf-parse 
+groq-sdk 
+multer
